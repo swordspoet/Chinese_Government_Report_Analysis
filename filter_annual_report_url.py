@@ -30,13 +30,13 @@ def get_standard_html(url):
     headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36'}
     req = urllib.request.Request(url=url, headers=headers)
     try:
-        html_doc = urllib.request.urlopen(req, timeout=20)
+        html_doc = urllib.request.urlopen(req, timeout=60)
         html_doc.encoding = "utf-8"
-        standard_html = BeautifulSoup(html_doc, 'lxml')
+        standard_html = BeautifulSoup(html_doc, 'html5lib')
         return standard_html
-    except urllib.error.HTTPError as e:
-        print(e.code)
-        print(e.read().decode("utf8"))
+    except Exception as e:
+        print("有错误！")
+        pass
 
 
 def filter_report_collect_url(standard_html):
@@ -65,7 +65,7 @@ def filter_local_gov_report_url(url):
     """
     local_gov_report_url_dict = []
     standard_html = get_standard_html(url)
-    standard_html.decode('gb2312').encode('utf8')
+    # standard_html.decode('gb2312').encode('utf8')
     raw_html_text = standard_html.find_all('div', class_='TRS_Editor')
     if len(raw_html_text) > 0:
         html_text = raw_html_text[0].find_all('a')
@@ -109,11 +109,12 @@ def get_report_text(url):
     :return: 
     """
     standard_html = get_standard_html(url)
-    raw_html_text = standard_html.find_all('p')
-    text = []
-    for item in raw_html_text:
-        text.append(item.get_text())
-    return text
+    if standard_html:
+        raw_html_text = standard_html.find_all('p')
+        text = []
+        for item in raw_html_text:
+            text.append(item.get_text())
+        return text
 
 
 def get_page_sum(url):
@@ -185,5 +186,6 @@ if __name__ == '__main__':
     a = get_standard_html(local_reports_collect_url)
     b = filter_report_collect_url(a)
     d = get_annual_report_url_list(b)
-    get_all_report(d)
-    # a = filter_local_gov_report_url('http://district.ce.cn/zg/201602/04/t20160204_8740940.shtml')
+    # get_all_report(d)
+    # a = get_page_sum('http://district.ce.cn/newarea/roll/201702/07/t20170207_20020701.shtml')
+    # b = get_report_text('http://district.ce.cn/newarea/roll/201702/07/t20170207_20020701.shtml')
