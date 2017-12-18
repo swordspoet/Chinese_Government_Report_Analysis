@@ -9,9 +9,9 @@
 
 
 import configparser as ConfigParser
+import logging
 import random
 import re
-import requests
 import time
 import urllib.request
 from bs4 import BeautifulSoup
@@ -27,16 +27,18 @@ def get_standard_html(url):
     """获取汇总合集页面的标准 HTML 文本
     :return: 
     """
-    headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36'}
+    headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                            'AppleWebKit/537.36 (KHTML, like Gecko) '
+                            'Chrome/63.0.3239.84 Safari/537.36'}
     req = urllib.request.Request(url=url, headers=headers)
     try:
-        html_doc = urllib.request.urlopen(req, timeout=60)
-        html_doc.encoding = "utf-8"
-        standard_html = BeautifulSoup(html_doc, 'html5lib')
-        return standard_html
+        html = urllib.request.urlopen(req, timeout=60).read()
+        standard_html = BeautifulSoup(html, 'html5lib')
     except Exception as e:
-        print("有错误！")
+        logging.info(url + "抓取超时......")
+        standard_html = None
         pass
+    return standard_html
 
 
 def filter_report_collect_url(standard_html):
@@ -65,7 +67,6 @@ def filter_local_gov_report_url(url):
     """
     local_gov_report_url_dict = []
     standard_html = get_standard_html(url)
-    # standard_html.decode('gb2312').encode('utf8')
     raw_html_text = standard_html.find_all('div', class_='TRS_Editor')
     if len(raw_html_text) > 0:
         html_text = raw_html_text[0].find_all('a')
@@ -101,6 +102,9 @@ def get_annual_report_url_list(url_dict):
         print(report_url)
         time.sleep(2)
     return annual_report_url_list
+
+
+
 
 
 def get_report_text(url):
@@ -186,6 +190,3 @@ if __name__ == '__main__':
     a = get_standard_html(local_reports_collect_url)
     b = filter_report_collect_url(a)
     d = get_annual_report_url_list(b)
-    # get_all_report(d)
-    # a = get_page_sum('http://district.ce.cn/newarea/roll/201702/07/t20170207_20020701.shtml')
-    # b = get_report_text('http://district.ce.cn/newarea/roll/201702/07/t20170207_20020701.shtml')
