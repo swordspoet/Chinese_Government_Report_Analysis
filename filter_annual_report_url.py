@@ -131,3 +131,4 @@ if __name__ == '__main__':
     url_dict = filter_report_collect_url(standard_html)
     annual_report_url_list = get_annual_report_url_list(url_dict)
     write_data_to_file(annual_report_url_list)
+
