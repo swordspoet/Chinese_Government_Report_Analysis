@@ -28,7 +28,7 @@ root_file_path = config['file_path']['root_directory']
 def read_url(annual_report_url_list_file_path):
     """
     读取 CSV 文件
-    :return: 
+    :return: DataFrame
     """
     df = pd.read_csv(annual_report_url_list_file_path, encoding='gbk')
     return df
@@ -55,10 +55,10 @@ def get_standard_html(url):
 def get_report_text(url):
     """从 URL 地址获取网页正文部分
     :param local_report_url: 
-    :return: 
+    :return: text：list，网页正文
     """
     standard_html = get_standard_html(url)
-    if standard_html:
+    if standard_html:  # 如果从地址中解析得到了网页源代码则获取正文，否则返回 None
         raw_html_text = standard_html.find_all('p')
         text = []
         for item in raw_html_text:
@@ -70,9 +70,7 @@ def get_report_text(url):
 
 def get_page_sum(url):
     """
-    获取报告总页数：共（n）页
-    :param url: 
-    :return: 
+    获取报告总页数：如“共（n）页”的 n 参数
     """
     standard_html = get_standard_html(url)
     if standard_html:
@@ -87,9 +85,7 @@ def get_page_sum(url):
 
 def generate_page_urls(url, page_sum):
     """
-    当报告有多个页面时，生成多页面的 URL
-    :param page_num_sum: 
-    :return: 
+    当报告有多个页面时，按照后缀递增的方式生成每个页面的 URL
     """
     i = 1
     url_list = [url]
@@ -98,7 +94,7 @@ def generate_page_urls(url, page_sum):
             page_url = ''.join([url[:-6], '_', str(i), '.shtml'])
             url_list.append(page_url)
             i += 1
-    except Exception:
+    except Exception:  # 上面的 while 判断偶尔出现一次错误，暂未找到原因，先忽略
         url_list = [url]
     return url_list
 
@@ -115,7 +111,7 @@ def crawl_province_report(report_title, province_report_url):
         text.append(tmp_text)
         file_path = root_file_path + str(report_title) + '.txt'
         print('正在抓取' + str(report_title) + '......')
-        time.sleep(random.randint(0, 9))
+        time.sleep(random.randint(0, 5))
     try:
         flatten_text = [item for sublist in text for item in sublist]
         report_text_handler = open(file_path, "ab+")
@@ -129,15 +125,13 @@ def crawl_province_report(report_title, province_report_url):
 def get_all_report():
     """
     从省市报告地址中提取出网页正文，并写入 TXT 文件
-    :param annual_report_url_list: 
-    :return: 
     """
     url_list_df = read_url(file_path)
     for item in url_list_df.iterrows():
         report_title = item[1]['report_title']
         province_report_url = item[1]['report_url']
         crawl_province_report(report_title, province_report_url)
-    time.sleep(3)
+    time.sleep(3)  # 间隔 3 秒抓取一次，防止抓取过于频繁
 
 
 if __name__ == '__main__':
